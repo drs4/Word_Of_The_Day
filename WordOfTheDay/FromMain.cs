@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
@@ -15,8 +16,8 @@ namespace WordOfTheDay
 {
     public partial class FromMain : Form
     {
-        private Random rand = new Random(System.DateTime.Now.Second);
-        SpeechSynthesizer speechSynthesizerObj;
+        private Random rand = new Random(System.DateTime.Now.GetHashCode());
+        private SpeechSynthesizer speechSynthesizerObj;
 
         public FromMain()
         {
@@ -45,6 +46,16 @@ namespace WordOfTheDay
 
         }
 
+        public void UpdateConnectionString()
+        {
+            //when called on startup, the connectionStrings should be a full path
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var connectionStringsSection = (ConnectionStringsSection)config.GetSection("connectionStrings");
+            connectionStringsSection.ConnectionStrings["MyDBContext"].ConnectionString = "Data Source="+Application.StartupPath+"\\WordsDB.sqlite";
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("connectionStrings");
+        }
+
         public static void RegRun(string App_path, bool r)
         {
             Microsoft.Win32.RegistryKey key;
@@ -69,7 +80,7 @@ namespace WordOfTheDay
 
         private Word GetWord()
         {
-
+            UpdateConnectionString();
             using (var db = new MyContext())
             {
                 var words = db.Words.ToList();
@@ -134,14 +145,16 @@ namespace WordOfTheDay
 
         private void itmAutorun_Click(object sender, EventArgs e)
         {
-            if (itmAutorun.Checked == false)
+            if (itmAutorun.Checked)
             {
                 RegRun("", false);
+                itmAutorun.Checked = false;
 
             }
             else
             {
                 RegRun(Application.ExecutablePath, true);
+                itmAutorun.Checked = true;
             }
 
         }
@@ -176,6 +189,11 @@ namespace WordOfTheDay
 
                 tmrMain.Enabled = true;
 
+                if (speechSynthesizerObj != null)
+                {
+                    speechSynthesizerObj.Dispose();
+                    speechSynthesizerObj = null;
+                }
             }
 
         }
@@ -191,33 +209,26 @@ namespace WordOfTheDay
         {
             tmrMain.Enabled = false;
             this.Show();
-            btnRead.PerformClick();
         }
 
-        private void btnRead_Click(object sender, EventArgs e)
-        {
-            if (speechSynthesizerObj != null)
-            {
-                speechSynthesizerObj.Dispose();
-            }
-            speechSynthesizerObj = new SpeechSynthesizer();
-            speechSynthesizerObj.SpeakAsync(txtWord.Text);
-        }
 
         private void FromMain_Activated(object sender, EventArgs e)
         {
-            if (speechSynthesizerObj != null)
-            {
-                if(speechSynthesizerObj.State == SynthesizerState.Paused)
-                    speechSynthesizerObj.Resume();
-                else
-                    speechSynthesizerObj.Dispose();
-            }
-            else
+            if (speechSynthesizerObj == null)
             {
                 speechSynthesizerObj = new SpeechSynthesizer();
                 speechSynthesizerObj.SpeakAsync(txtWord.Text);
             }
+            else if (speechSynthesizerObj.State == SynthesizerState.Paused)
+            {
+                speechSynthesizerObj.Resume();
+            }
+            else
+            {
+                speechSynthesizerObj.Dispose();
+                speechSynthesizerObj = null;
+            }
+
         }
 
         private void FromMain_Deactivate(object sender, EventArgs e)
@@ -225,6 +236,10 @@ namespace WordOfTheDay
             if (speechSynthesizerObj != null && speechSynthesizerObj.State == SynthesizerState.Speaking)
             {
                 speechSynthesizerObj.Pause();
+            }else if (speechSynthesizerObj.State == SynthesizerState.Ready)
+            {
+                speechSynthesizerObj.Dispose();
+                speechSynthesizerObj = null;
             }
         }
     }

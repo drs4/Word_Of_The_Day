@@ -41,7 +41,6 @@
             this.itmAutorun = new System.Windows.Forms.ToolStripMenuItem();
             this.itmExit = new System.Windows.Forms.ToolStripMenuItem();
             this.tmrMain = new System.Windows.Forms.Timer(this.components);
-            this.btnRead = new System.Windows.Forms.Button();
             this.mainMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -144,25 +143,13 @@
             this.tmrMain.Interval = 3600000;
             this.tmrMain.Tick += new System.EventHandler(this.tmrMain_Tick);
             // 
-            // btnRead
-            // 
-            this.btnRead.Location = new System.Drawing.Point(0, 0);
-            this.btnRead.Name = "btnRead";
-            this.btnRead.Size = new System.Drawing.Size(75, 23);
-            this.btnRead.TabIndex = 7;
-            this.btnRead.Text = "Read";
-            this.btnRead.UseVisualStyleBackColor = true;
-            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
-            // 
             // FromMain
             // 
-            this.AcceptButton = this.btnRead;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(319, 167);
             this.Controls.Add(this.txtWord);
             this.Controls.Add(this.lblId);
-            this.Controls.Add(this.btnRead);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "FromMain";
@@ -188,7 +175,6 @@
         private System.Windows.Forms.ToolStripMenuItem itmAutorun;
         private System.Windows.Forms.ToolStripMenuItem itmExit;
         private System.Windows.Forms.Timer tmrMain;
-        private System.Windows.Forms.Button btnRead;
     }
 }
 
