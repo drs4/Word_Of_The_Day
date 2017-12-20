@@ -11,7 +11,5 @@ namespace WordOfTheDay.Models
         public List<string> etymologies { get; set; }
         public List<APISense> senses { get; set; }
 
-        public string language { get; set; }
-        public string lexicalCategory { get; set; }
     }
 }

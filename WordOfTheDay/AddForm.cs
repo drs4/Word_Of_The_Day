@@ -136,34 +136,39 @@ namespace WordOfTheDay
         {
             try
             {
-                Random random = new Random(System.DateTime.Now.GetHashCode());
+                Random random = new Random(System.DateTime.Now.Millisecond);
                 if (!client.DefaultRequestHeaders.Contains("app_id"))
                 {
                     client.DefaultRequestHeaders.Add("app_id", "e7979876");
                     client.DefaultRequestHeaders.Add("app_key", "8b61eef92ef0d5084845d881b412ac6e");
                 }
                 //215619 is the total in metadata of the wordslist request
-                string url = "https://od-api.oxforddictionaries.com:443/api/v1/wordlist/en/regions%3Dus?limit=1&offset=" + random.Next(215619);
+                string url = "https://od-api.oxforddictionaries.com:443/api/v1/wordlist/en/regions%3Dus?limit=1&offset=" + random.Next(1, 215619);
 
-                var responseString = await client.GetStringAsync(url);
+                if (string.IsNullOrEmpty(txtWord.Text))
+                {
+                    var wordsListResponse = await client.GetStringAsync(url);
+                    var wordsList = JsonConvert.DeserializeObject<APIListResponse>(wordsListResponse);
+                    txtWord.Text = wordsList.results[0].word;
+                    return;
+                }
 
-                var wordsList = JsonConvert.DeserializeObject<APIListResponse>(responseString);
-                txtWord.Text = wordsList.results[0].word;
                 var wordId = txtWord.Text.Replace(' ', '_');
                 url = "https://od-api.oxforddictionaries.com:443/api/v1/entries/en/" + wordId + "/regions=us";
-                responseString = await client.GetStringAsync(url);
+                var wordMeaningResponse = await client.GetStringAsync(url);
 
-                var r = JsonConvert.DeserializeObject<APIMeaningResponse>(responseString);
-                var definition = r.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0]??"";
-                var example = r.results[0].lexicalEntries[0].entries[0].senses[0].examples[0].text??"";
-                var type = r.results[0].lexicalEntries[0].entries[0].lexicalCategory??"";
+                var r = JsonConvert.DeserializeObject<APIMeaningResponse>(wordMeaningResponse);
+                var sense = r.results[0].lexicalEntries[0].entries[0].senses[0];
+                var definition = sense.definitions[0];
+                var example = sense.examples != null ? sense.examples[0].text:"";
+                var type = r.results[0].lexicalEntries[0].lexicalCategory ?? "";
                 txtDefinition.Text = definition;
                 txtExample.Text = example;
                 cmbType.Text = type;
             }
             catch (Exception)
             {
-                MessageBox.Show("Something went wrong!");
+                MessageBox.Show("No internet Connection!", "Filed", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
 
